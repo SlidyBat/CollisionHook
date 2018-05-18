@@ -14,7 +14,15 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define DETOUR_DECL_STATIC2_FASTCALL(name, ret, p1type, p1name, p2type, p2name) \
+ret (__fastcall *name##_Actual)(p1type, p2type) = NULL; \
+ret __fastcall name(p1type p1name, p2type p2name)
 
+#if SOURCE_ENGINE == SE_CSGO && defined PLATFORM_WINDOWS
+#define DETOUR_FUNC DETOUR_DECL_STATIC2_FASTCALL
+#else
+#define DETOUR_FUNC DETOUR_DECL_STATIC2
+#endif
 
 CollisionHook g_CollisionHook;
 SMEXT_LINK( &g_CollisionHook );
@@ -34,7 +42,7 @@ IForward *g_pCollisionFwd = NULL;
 IForward *g_pPassFwd = NULL;
 
 
-DETOUR_DECL_STATIC2( PassServerEntityFilterFunc, bool, const IHandleEntity *, pTouch, const IHandleEntity *, pPass )
+DETOUR_FUNC( PassServerEntityFilterFunc, bool, const IHandleEntity *, pTouch, const IHandleEntity *, pPass )
 {
 	if ( g_pPassFwd->GetFunctionCount() == 0 )
 		return DETOUR_STATIC_CALL( PassServerEntityFilterFunc )( pTouch, pPass );
